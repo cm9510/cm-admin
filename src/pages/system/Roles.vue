@@ -193,7 +193,7 @@ const delRole = (idx: number, id: number) => {
       </t-table>
     </div>
   </div>
-  <t-dialog v-model:visible="showEdit" header="编辑角色" mode="modal" draggable width="850"
+  <t-dialog v-model:visible="showEdit" header="编辑角色" mode="modal" width="800" placement="center"
     :on-confirm="editSubmit" @opened="loadPermission" @closed="clearaForm">
     <template #body>
       <div class="edit-box">

@@ -13,27 +13,27 @@ export const businessRoutes: Array<RouteRecordRaw> = [
           path: 'members',
           name: 'sysMembers',
           meta: { title: '成员'},
-          component:() => import('../pages/system/MembersView.vue')
+          component:() => import('../pages/system/Members.vue')
         },
         {
           path: 'role',
           name: 'sysRole',
           meta: { title: '角色列表'},
-          component:() => import('../pages/system/RoleView.vue')
+          component:() => import('../pages/system/Roles.vue')
         },
         {
           path: 'permission',
           name: 'sysPermission',
           meta: { title: '权限列表'},
-          component:() => import('../pages/system/PermissionView.vue')
+          component:() => import('../pages/system/Permission.vue')
+        },
+        {
+          path: 'logs',
+          name: 'sysLogs',
+          meta: { title: '日志'},
+          component:() => import('../pages/system/Logs.vue')
         },
       ]
     },
-    // {
-    //   path: '/system',
-    //   redirect: '',
-    //   name: 'aaa',
-    //   meta: {title:'平台管理', icon:'user'}
-    // }
   ]
   

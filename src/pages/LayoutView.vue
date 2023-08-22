@@ -8,16 +8,17 @@ import { RouteRecordRaw, useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()
-const menus = ref<any>([])
+const menuList = ref<any>([])
 
 onMounted(()=>{
-  const _menus = userStore.menus
-  if(_menus){
+  const {menus, token} = userStore
+  
+  if(token && menus.length){
     businessRoutes.map((item:RouteRecordRaw, _) => {
-      if(item.children && item.children.length){ //有二级的
+      if(item.children?.length){ //有二级的
         let _sub:any = []
         item.children.map(sub => {
-          if(_menus.indexOf(sub.name) >= 0 && !sub.meta?.hide){
+          if(menus.indexOf(sub.name) >= 0 && !sub.meta?.hide){
             _sub.push({
               path: sub.path,
               title: sub.meta?.title
@@ -25,7 +26,7 @@ onMounted(()=>{
           }
         })
         if(_sub.length > 0){
-          menus.value.push({
+          menuList.value.push({
             path: item.path,
             title: item.meta?.title,
             icon: item.meta?.icon,
@@ -33,7 +34,7 @@ onMounted(()=>{
           })
         }
       }else if((!item.children || !item.children.length) && !item.meta?.hide){ //没有二级的
-        menus.value.push({
+        menuList.value.push({
           path: item.path,
           title: item.meta?.title,
           icon: item.meta?.icon,
@@ -106,7 +107,7 @@ const navTo = (path:string) => {
       </div>
       <div class="menus">
         <t-menu :theme="themeMode" width="210px" :collapsed="collapsed">
-          <template v-for="(v, i) in menus" :key="i">
+          <template v-for="(v, i) in menuList" :key="i">
             <t-submenu v-if="v.sub && v.sub.length" :title="v.title" :value="`${i+1}`">
               <template #icon>
                 <t-icon :name="v.icon" />
@@ -221,7 +222,7 @@ const navTo = (path:string) => {
     .content {
       height: calc(100% - @topHeight);
       overflow-y: scroll;
-      padding: 20px;
+      padding: 12px;
     }
   }
 }
