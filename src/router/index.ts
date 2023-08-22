@@ -5,12 +5,12 @@ const baseRoutes: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('../views/pages/login/LoginView.vue')
+    component: () => import('../pages/login/LoginView.vue')
   },
   {
     path: '/test',
     name: 'test',
-    component: () => import('../views/pages/aaView.vue')
+    component: () => import('../pages/aaView.vue')
   }
 ]
 

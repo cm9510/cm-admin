@@ -1,50 +1,10 @@
-<template>
-  <div class="login">
-    <div class="login-form">
-      <div class="title">后台管理系统</div>
-      <div class="form">
-        <t-form ref="form" :data="formData" :label-width="0" @submit="onSubmit">
-          <t-form-item name="account">
-            <t-input v-model="formData.account" clearable placeholder="用户名/手机号">
-              <template #prefix-icon>
-                <t-icon name="desktop" />
-              </template>
-            </t-input>
-          </t-form-item>
-          <t-form-item name="password">
-            <t-input v-model="formData.password" type="password" placeholder="请输入密码">
-              <template #prefix-icon>
-                <t-icon name="lock-on" />
-              </template>
-            </t-input>
-          </t-form-item>
-          <t-form-item name="captcha">
-            <t-input-group separate>
-              <t-input style="width:200px;" v-model="formData.captcha" clearable placeholder="图片验证码">
-                <template #prefix-icon>
-                  <t-icon name="image" />
-                </template>
-              </t-input>
-              <div class="captcha"><img :src="captcha" class="img" alt="captcha" /></div>
-              <div class="refresh" @click="refreshCaptch"><t-icon name="refresh" /></div>
-            </t-input-group>
-          </t-form-item>
-          <t-form-item style="padding-top: 8px">
-            <t-button theme="primary" type="submit" block>登录</t-button>
-          </t-form-item>
-        </t-form>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { onMounted,reactive, ref } from '@vue/runtime-core'
-import api from '@/common/api'
-import { Toast } from '@/common/utils'
+import api from '@/lib/api'
+import { Toast } from '@/lib/utils'
 import { useRouter } from 'vue-router'
 import md5 from 'js-md5'
-import { ApiRes,API_RES } from '@/common/common'
+import { ApiRes,API_RES } from '@/lib/consts'
 import { useUserStore } from '@/store'
 
 const router = useRouter()
@@ -103,6 +63,46 @@ const onSubmit = () => {
   })
 }
 </script>
+
+<template>
+  <div class="login">
+    <div class="login-form">
+      <div class="title">后台管理系统</div>
+      <div class="form">
+        <t-form ref="form" :data="formData" :label-width="0" @submit="onSubmit">
+          <t-form-item name="account">
+            <t-input v-model="formData.account" clearable placeholder="用户名/手机号">
+              <template #prefix-icon>
+                <t-icon name="desktop" />
+              </template>
+            </t-input>
+          </t-form-item>
+          <t-form-item name="password">
+            <t-input v-model="formData.password" type="password" placeholder="请输入密码">
+              <template #prefix-icon>
+                <t-icon name="lock-on" />
+              </template>
+            </t-input>
+          </t-form-item>
+          <t-form-item name="captcha">
+            <t-input-group separate>
+              <t-input style="width:200px;" v-model="formData.captcha" clearable placeholder="图片验证码">
+                <template #prefix-icon>
+                  <t-icon name="image" />
+                </template>
+              </t-input>
+              <div class="captcha"><img :src="captcha" class="img" alt="captcha" /></div>
+              <div class="refresh" @click="refreshCaptch"><t-icon name="refresh" /></div>
+            </t-input-group>
+          </t-form-item>
+          <t-form-item style="padding-top: 8px">
+            <t-button theme="primary" type="submit" block>登录</t-button>
+          </t-form-item>
+        </t-form>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style lang="less" scoped>
 .login {

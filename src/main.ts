@@ -8,6 +8,4 @@ import TDesign from 'tdesign-vue-next'
 import 'tdesign-vue-next/es/style/index.css'
 import './theme-style.css'
 
-const app = createApp(App)
-
-app.use(router).use(store).use(TDesign).mount('body')
+createApp(App).use(store).use(TDesign).use(router).mount('#app')

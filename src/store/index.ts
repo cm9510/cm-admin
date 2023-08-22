@@ -4,6 +4,6 @@ export * from './user'
 
 const store = createPinia()
 
-export { store };
+export { store }
 
 

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { TOKEN_NAME } from '@/common/common'
+import { TOKEN_NAME } from '@/lib/consts'
 import { store } from '@/store'
 
 export const useUserStore = defineStore('user', {

@@ -1,3 +1,103 @@
+<script setup lang="ts">
+import { businessRoutes } from '@/router/business'
+import { useUserStore } from '@/store'
+import { ref } from '@vue/reactivity'
+import { onMounted } from 'vue'
+import { RouteRecordRaw, useRouter } from 'vue-router'
+
+
+const router = useRouter()
+const userStore = useUserStore()
+const menus = ref<any>([])
+
+onMounted(()=>{
+  const _menus = userStore.menus
+  if(_menus){
+    businessRoutes.map((item:RouteRecordRaw, _) => {
+      if(item.children && item.children.length){ //有二级的
+        let _sub:any = []
+        item.children.map(sub => {
+          if(_menus.indexOf(sub.name) >= 0 && !sub.meta?.hide){
+            _sub.push({
+              path: sub.path,
+              title: sub.meta?.title
+            })
+          }
+        })
+        if(_sub.length > 0){
+          menus.value.push({
+            path: item.path,
+            title: item.meta?.title,
+            icon: item.meta?.icon,
+            sub:_sub
+          })
+        }
+      }else if((!item.children || !item.children.length) && !item.meta?.hide){ //没有二级的
+        menus.value.push({
+          path: item.path,
+          title: item.meta?.title,
+          icon: item.meta?.icon,
+          sub:[]
+        })
+      }
+    })    
+  }else{
+    router.push({path: '/login'})
+  }
+})
+
+const collapsed = ref(false)
+const iconUrl = ref('https://www.tencent.com/img/index/menu_logo_hover.png')
+const changeCollapsed = () => {
+  collapsed.value = !collapsed.value
+  iconUrl.value = collapsed.value
+    ? 'https://oteam-tdesign-1258344706.cos.ap-guangzhou.myqcloud.com/site/logo%402x.png'
+    : 'https://www.tencent.com/img/index/menu_logo_hover.png'
+}
+
+const account = [
+  { content: '账号信息', value: 'account' },
+  { content: '退出', value: 'logout' }
+]
+const clickHandler = ({ value }:any) => {
+  if(value === 'logout'){
+    userStore.logout()
+    router.push({path: '/login'})
+  }
+}
+
+const showSetting = ref(false)
+const themeMode = ref('light')
+const setMode = (mode: string) => {
+  themeMode.value = mode
+  if (mode === 'dark') {
+    document.documentElement.setAttribute('theme-mode', 'dark')
+  } else {
+    document.documentElement.removeAttribute('theme-mode')
+  }
+}
+
+const colorOptions = [
+  { type: 'default', value: '#0052D9' },
+  { type: 'cyan', value: '#0594FA' },
+  { type: 'green', value: '#00A870' },
+  { type: 'yellow', value: '#EBB105' },
+  { type: 'orange', value: '#ED7B2F' },
+  { type: 'red', value: '#E34D59' },
+  { type: 'pink', value: '#ED49B4' },
+  { type: 'purple', value: '#834EC2' }
+]
+const themeColor = ref('default')
+const checkColor = (color: string) => {
+  themeColor.value = color
+  document.documentElement.setAttribute('theme-color', color)
+}
+
+const navTo = (path:string) => {
+  router.push({path: path})
+}
+</script>
+
 <template>
   <div class="layout">
     <div class="layout-left">
@@ -48,8 +148,7 @@
       </div>
     </div>
   </div>
-  <t-drawer v-model:visible="showSetting" placement="right" :footer="false" size="medium"
-    header="页面设置">
+  <t-drawer v-model:visible="showSetting" placement="right" :footer="false" size="medium" header="页面设置">
     <p>主题模式</p>
     <div class="mode">
       <div>
@@ -79,106 +178,6 @@
     </div>
   </t-drawer>
 </template>
-
-<script setup lang="ts">
-import { businessRoutes } from '@/router/business'
-import { useUserStore } from '@/store'
-import { ref } from '@vue/reactivity'
-import { onMounted } from 'vue-demi'
-import { RouteRecordRaw, useRouter } from 'vue-router'
-
-
-const router = useRouter()
-const userStore = useUserStore()
-const menus = ref([])
-
-onMounted(()=>{
-  const _menus = userStore.menus
-  if(_menus){
-    businessRoutes.map((item:RouteRecordRaw, i) => {
-      if(item.children && item.children.length){ //有二级的
-        let _sub:any = []
-        item.children.map(sub => {
-          if(_menus.indexOf(sub.name) >= 0 && !sub.meta?.hide){
-            _sub.push({
-              path: sub.path,
-              title: sub.meta?.title
-            })
-          }
-        })
-        if(_sub.length > 0){
-          menus.value.push({
-            path: item.path,
-            title: item.meta?.title,
-            icon: item.meta?.icon,
-            sub:_sub
-          })
-        }
-      }else if((!item.children || !item.children.length) && !item.meta?.hide){ //没有二级的
-        menus.value.push({
-          path: item.path,
-          title: item.meta?.title,
-          icon: item.meta?.icon,
-          sub:[]
-        })
-      }
-    })    
-  }else{
-    router.push({path: '/login'})
-  }
-})
-
-const collapsed = ref(false)
-const iconUrl = ref('https://www.tencent.com/img/index/menu_logo_hover.png')
-const changeCollapsed = () => {
-  collapsed.value = !collapsed.value
-  iconUrl.value = collapsed.value
-    ? 'https://oteam-tdesign-1258344706.cos.ap-guangzhou.myqcloud.com/site/logo%402x.png'
-    : 'https://www.tencent.com/img/index/menu_logo_hover.png'
-}
-
-const account = [
-  { content: '账号信息', value: 'account' },
-  { content: '退出', value: 'logout' }
-]
-const clickHandler = ({ value }) => {
-  if(value === 'logout'){
-    userStore.logout()
-    router.push({path: '/login'})
-  }
-}
-
-const showSetting = ref(false)
-const themeMode = ref('light')
-const setMode = (mode: string) => {
-  themeMode.value = mode
-  if (mode === 'dark') {
-    document.documentElement.setAttribute('theme-mode', 'dark')
-  } else {
-    document.documentElement.removeAttribute('theme-mode')
-  }
-}
-
-const colorOptions = [
-  { type: 'default', value: '#0052D9' },
-  { type: 'cyan', value: '#0594FA' },
-  { type: 'green', value: '#00A870' },
-  { type: 'yellow', value: '#EBB105' },
-  { type: 'orange', value: '#ED7B2F' },
-  { type: 'red', value: '#E34D59' },
-  { type: 'pink', value: '#ED49B4' },
-  { type: 'purple', value: '#834EC2' }
-]
-const themeColor = ref('default')
-const checkColor = (color: string) => {
-  themeColor.value = color
-  document.documentElement.setAttribute('theme-color', color)
-}
-
-const navTo = (path:string) => {
-  router.push({path: path})
-}
-</script>
 
 <style scoped lang="less">
 @topHeight: 65px;
@@ -226,7 +225,7 @@ const navTo = (path:string) => {
     }
   }
 }
-::v-deep .t-menu__logo:not(:empty) {
+:deep(.t-menu__logo:not(:empty)){
   margin-left: 10px;
   .t-icon {
     cursor: pointer;

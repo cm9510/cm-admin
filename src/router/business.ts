@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from 'vue-router'
 
-import Layout from '../views/layout/LayoutView.vue'
+import Layout from '../pages/LayoutView.vue'
 
 export const businessRoutes: Array<RouteRecordRaw> = [
     {
@@ -13,19 +13,19 @@ export const businessRoutes: Array<RouteRecordRaw> = [
           path: 'members',
           name: 'sysMembers',
           meta: { title: '成员'},
-          component:() => import('../views/pages/system/MembersView.vue')
+          component:() => import('../pages/system/MembersView.vue')
         },
         {
           path: 'role',
           name: 'sysRole',
           meta: { title: '角色列表'},
-          component:() => import('../views/pages/system/RoleView.vue')
+          component:() => import('../pages/system/RoleView.vue')
         },
         {
           path: 'permission',
           name: 'sysPermission',
           meta: { title: '权限列表'},
-          component:() => import('../views/pages/system/PermissionView.vue')
+          component:() => import('../pages/system/PermissionView.vue')
         },
       ]
     },
