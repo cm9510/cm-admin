@@ -3,35 +3,56 @@ import api from '@/lib/api'
 import { ApiRes, API_RES } from '@/lib/consts'
 import { reactive, ref } from '@vue/reactivity'
 import { onMounted } from '@vue/runtime-core'
-import { datetime, Toast } from '@/lib/utils'
+import { datetime,debounce,ApiToast} from '@/lib/utils'
+import {AddIcon,EditIcon,MinusCircleIcon,SearchIcon} from 'tdesign-icons-vue-next';
+import { MessagePlugin } from 'tdesign-vue-next'
 
 const columns = [
-  { colKey: 'idx', title: '序号', width: 80, align: 'center' },
-  { colKey: 'name', title: '权限名' },
-  { colKey: 'url', title: 'API' },
-  { colKey: 'status', title: '状态', cell: 'status' },
+  { colKey: 'id', title: 'ID', width: 80, align: 'center' },
+  { colKey: 'name', title: '权限信息' },
+  { colKey: 'status', title: '状态', width:100, cell: 'status' },
   { colKey: 'creator', title: '编辑' },
-  { colKey: 'create_at', title: '创建时间' },
+  { colKey: 'created_at', title: '创建时间' },
   { colKey: 'op', title: '操作', cell: 'op-col' }
 ]
-
+const options = ref<any>([]);
 const pagination = reactive({
   defaultCurrent: 1,
   defaultPageSize: 20,
   total: 0
 })
+const groupList = ref<any>([])
 const list = ref([])
 const keyword = ref('')
+const groupId = ref(0)
 
 onMounted(() => {
-  loadPermissionList(pagination.defaultCurrent, pagination.defaultPageSize)
+  loadGroupList(true)
 })
 
-// 加载列表
-const loadPermissionList = (page: number, size: number, keyword = ''): void => {
-  const param: any = { page: page, size: size }
-  if (keyword) {
-    param.keyword = keyword
+//加载分组列表
+const loadGroupList = (first=false)=>{
+  const query:any = {}
+  if(first){
+    query.lp = 'load'
+  }
+  api.permissionGroups(query).then((res:ApiRes)=>{
+    if (res.data.group?.length) {
+      groupList.value = res.data.group
+      options.value = res.data.group.map((v:any) => ({label:v.name,value:v.id}))
+      if (first) {
+        groupId.value = res.data.group[0]?.id
+        pagination.total = res.data.permission.total
+        list.value = res.data.permission.list
+      }
+    }
+  })
+}
+// 加载权限列表
+const loadPermissionList = (page: number, size: number): void => {
+  const param: any = { group_id:groupId.value,page: page, size: size }
+  if (keyword.value) {
+    param.keyword = keyword.value
   }
   api.permissionList(param).then((res: ApiRes) => {
     pagination.total = res.data.total
@@ -40,53 +61,110 @@ const loadPermissionList = (page: number, size: number, keyword = ''): void => {
 }
 
 // 搜索
-const doSearch = (): void => {
+const doSearch = debounce(()=>{
   pagination.defaultCurrent = 1
-  loadPermissionList(1, pagination.defaultPageSize, keyword.value)
+  loadPermissionList(1, pagination.defaultPageSize)
+}, 800)
+
+//切换分组
+const switchGroup = (gid:number)=>{
+  if (groupId.value !== gid) {
+    groupId.value = gid
+    loadPermissionList(pagination.defaultCurrent, pagination.defaultPageSize)
+  }
 }
 
 // 分页改变时
 const pageChange = ({ pagination }: any): void => {
-  loadPermissionList(pagination.current, pagination.pageSize, keyword.value)
+  loadPermissionList(pagination.current, pagination.pageSize)
 }
 
 const showEdit = ref(false)
-const permission = reactive({
-  id: 0,
-  name: '',
-  url: '',
-  status: 1,
-  log: 0
-})
+const showGroupEdit = ref(false)
+const group = reactive({ id: 0, name: '', key: '',sort:'' })
+const permission = reactive({ id: 0, group_id:'', name: '', url: '', status: 1, log: 0 })
+
+//编辑分组
+const editGroup = (row: any): void => {
+  group.id = row.id
+  group.name = row.name
+  group.key = row.key
+  group.sort = row.sort
+  showGroupEdit.value = true
+}
+const clearGroupForm = (): void => {
+  group.id = 0
+  group.sort = ''
+  group.name = ''
+  group.key = ''
+}
 const editPerm = (row: any): void => {
   permission.id = row.id
-  permission.name = row.name
+  permission.group_id = row.group_id
+  permission.name = row.name ? row.name : ''
+  permission.log = row.log
   permission.url = row.url
   permission.status = row.status === 1 ? 0 : 1
   showEdit.value = true
 }
-const clearaForm = (): void => {
+const clearForm = (): void => {
   permission.id = 0
+  permission.group_id = ''
   permission.name = ''
   permission.url = ''
   permission.status = 1
+  permission.log = 0
+}
+
+// 添加|修改权限分组
+const editGroupSubmit = () => {
+  if (!group.name) {
+    MessagePlugin.error('请填写分组名')
+    return false
+  } else if (group.key && !(/^[a-z]{1,20}$/).test(group.key)) {
+    MessagePlugin.error('key只能是1~20位小写字母')
+    return false
+  }
+  api.addPermissionGroup(group).then((res: ApiRes) => {
+    ApiToast(res.msg,res.code)
+    if(res.code === API_RES.SUCCESS){
+      loadGroupList()
+      showGroupEdit.value = false
+    }
+  })
+}
+// 删除分组
+const delGroup = (idx:number,row:any)=>{
+  if(row.pn > 0){
+    MessagePlugin.error('该分组有权限，不可删除')
+    return false
+  }
+  api.delSys({id:row.id,body:'permission_group'}).then((res:ApiRes)=>{
+    ApiToast(res.msg,res.code)
+    if(res.code === API_RES.SUCCESS){
+      groupList.value.splice(idx, 1)
+    }
+  })
 }
 
 // 添加|修改权限
 const editSubmit = () => {
-  if (!permission.name) {
-    Toast('请填写权限名', 101)
+  if (!permission.group_id) {
+    MessagePlugin.error('请填选择分组')
+    return false
+  }else if (!permission.name) {
+    MessagePlugin.error('请填写权限名')
     return false
   } else if (!permission.url) {
-    Toast('请填写权限url', 101)
+    MessagePlugin.error('请填写权限url')
     return false
   }
   const ePerm = { ...permission }
   ePerm.status = ePerm.status === 1 ? 0 : 1
   api.addPermission(ePerm).then((res: ApiRes) => {
-    Toast(res.msg, res.code)
+    ApiToast(res.msg,res.code)
     if (res.code === API_RES.SUCCESS) {
-      loadPermissionList(pagination.defaultCurrent, pagination.defaultPageSize, keyword.value)
+      loadPermissionList(pagination.defaultCurrent, pagination.defaultPageSize)
       showEdit.value = false
     }
   })
@@ -95,7 +173,7 @@ const editSubmit = () => {
 // 删除权限
 const delPerm = (idx: number, id: number) => {
   api.delSys({ id: id, body: 'permission' }).then((res: ApiRes) => {
-    Toast(res.msg, res.code)
+    ApiToast(res.msg,res.code)
     if (res.code === API_RES.SUCCESS) {
       list.value.splice(idx, 1)
       pagination.total -= 1
@@ -106,57 +184,86 @@ const delPerm = (idx: number, id: number) => {
 
 <template>
   <div class="container">
-    <div class="operation">
-      <div class="op-btn">
-        <t-button theme="primary" @click="showEdit = true">
-          <template #icon>
-            <t-icon name="add" />
-          </template>
-          添加权限
+    <div class="cate">
+      <div class="add-group">
+        <t-button theme="primary" @click="showGroupEdit = true">
+          <template #icon><AddIcon /></template>
+          添加分组
         </t-button>
       </div>
-      <div class="op-search">
-        <t-input placeholder="名称/api" clearable v-model="keyword" @enter="doSearch">
-          <template #prefix-icon>
-            <t-icon name="search" />
-          </template>
-        </t-input>
-      </div>
+      <ul class="group">
+          <li v-for="(v, i) in groupList" :class="{'group-item':true,'active':(groupId === v.id)}" :key="v.id">
+            <div class="title" @click="switchGroup(v.id)">{{v.name}} <span class="group-num">({{v.pn}})</span></div>
+            <div class="op">
+              <span class="group-op-icon"><EditIcon  style="color:var(--td-brand-color-6);" @click="editGroup(v)"/></span>
+              <span class="group-op-icon">
+                <t-popconfirm theme="warning" content="将删除此分组？" @confirm="delGroup(i, v)">
+                  <MinusCircleIcon style="color:var(--td-error-color-6);"/>
+                </t-popconfirm>
+              </span>
+            </div>
+          </li>
+      </ul>
     </div>
-    <div class="main">
-      <t-table row-key="id" :columns="columns" :data="list" :pagination="pagination" size="small" stripe
-        @change="pageChange">
-        <template #idx="{ rowIndex }">
-          <b>{{ rowIndex + 1 }}</b>
+    <div class="permission">
+      <div class="search">
+        <t-button theme="primary" @click="showEdit = true">
+        <template #icon><AddIcon /></template>
+        添加权限
+      </t-button>
+      <t-input class="search-input" placeholder="搜索：名称/api" clearable v-model="keyword" @change="doSearch">
+        <template #suffix-icon>
+          <SearchIcon />
         </template>
+      </t-input>
+      </div>
+      <t-table row-key="id" :columns="columns" :data="list" :pagination="pagination" size="small" stripe @change="pageChange">
         <template #status="{ row }">
           <t-tag v-if="row.status === 0" theme="success" variant="light">正常</t-tag>
           <t-tag v-else-if="row.status === 1" theme="danger" variant="light">已停用</t-tag>
+        </template>
+        <template #name="{ row }">
+          <div class="edit-info">Name：{{ row.name }}</div>
+          <div class="edit-info">Api：{{ row.url }}</div>
         </template>
         <template #creator="{ row }">
           <div class="edit-info">创建人：{{ row.creator?.nickname || '-' }}</div>
           <div class="edit-info">修改人：{{ row.updator?.nickname || '-' }}</div>
         </template>
-        <template #create_at="{ row }">
-          {{ datetime(row.create_at) }}
+        <template #created_at="{ row }">
+          {{ datetime(row.created_at) }}
         </template>
         <template #op-col="{ rowIndex, row }">
           <a class="op op-edit" @click="editPerm(row)">编辑</a>
-          <t-popconfirm theme="warning" content="您确定删除此权限吗？" @confirm="delPerm(rowIndex, row.id)">
+          <t-popconfirm theme="warning" content="确定删除此权限吗？" @confirm="delPerm(rowIndex, row.id)">
             <a class="op op-del">删除</a>
           </t-popconfirm>
-        </template>
-        <template #name="{ row }">
-          {{ row.name }}
         </template>
       </t-table>
     </div>
   </div>
-
-  <t-dialog v-model:visible="showEdit" header="编辑权限" mode="modal" placement="center" :on-confirm="editSubmit"
-    @closed="clearaForm">
+  <t-dialog v-model:visible="showGroupEdit" header="编辑权限分组" mode="modal" placement="center" :on-confirm="editGroupSubmit"
+    @closed="clearGroupForm">
+    <template #body>
+      <t-form ref="form" :data="group" :colon="true" :label-width="80">
+        <t-form-item label="分组名" required-mark>
+          <t-input v-model="group.name" clearable placeholder="请输入分组名" />
+        </t-form-item>
+        <t-form-item label="Key">
+          <t-input v-model="group.key" clearable placeholder="唯一key值，可不填" />
+        </t-form-item>
+        <t-form-item label="排序">
+          <t-input type="number" v-model="group.sort" clearable :placeholder="`整数，数字越大越靠前，当前最大数: ${groupList[0]?.sort}`" />
+        </t-form-item>
+      </t-form>
+    </template>
+  </t-dialog>
+  <t-dialog v-model:visible="showEdit" header="编辑权限" mode="modal" placement="center" :on-confirm="editSubmit" @closed="clearForm">
     <template #body>
       <t-form ref="form" :data="permission" :colon="true" :label-width="80">
+        <t-form-item label="分组" required-mark>
+          <t-select v-model="permission.group_id" placeholder="-请选择-" :options="options" filterable/>
+        </t-form-item>
         <t-form-item label="权限名" required-mark>
           <t-input v-model="permission.name" clearable placeholder="请输入权限名" />
         </t-form-item>
@@ -175,5 +282,56 @@ const delPerm = (idx: number, id: number) => {
 </template>
 
 <style scoped lang="less">
-@import url('./common.less');
+.container{
+  background-color: var(--td-bg-color-container); display: flex;
+  gap: var(--td-size-4);
+  .cate{
+    flex-grow: 0;
+  }
+  .permission{
+    flex-grow: 1;
+
+    .search{
+      padding: var(--td-size-4);display: flex;justify-content: space-between;
+      &-input{
+        width: 360px;
+      }
+    }
+  }
+  .add-group{
+    padding: var(--td-size-4);width: 14vw;
+  }
+  .group{
+    padding: var(--td-size-5) 0;max-height:80vh;overflow-y: scroll;
+    &::-webkit-scrollbar{
+        width: 6px;
+        background-color: var(--td-bg-color-container);
+    }
+    &::-webkit-scrollbar-thumb{
+        background-color:var(--td-gray-color-5);border-radius: 2px;
+    }
+    &-op-icon{
+      padding-left: var(--td-size-3);
+    }
+    &-item{
+      cursor: pointer;
+      padding:0 var(--td-size-5);margin-bottom: var(--td-size-7);
+    }
+    &-num{
+      font-size: var(--td-size-4);color: var(--td-gray-color-6);font-weight: normal;
+    }
+    .active{
+      font-weight: bold;color: var(--td-brand-color-6);
+    }
+  }
+}
+.op{
+  padding:0 var(--td-size-2);cursor: pointer;
+  &-edit{
+    color: var(--td-brand-color-6);
+  }
+  &-del{
+    color: var(--td-error-color-6);
+    }
+}
 </style>

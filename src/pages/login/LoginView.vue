@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { onMounted,reactive, ref } from '@vue/runtime-core'
 import api from '@/lib/api'
-import { Toast } from '@/lib/utils'
+import { ApiToast } from '@/lib/utils'
 import { useRouter } from 'vue-router'
 import md5 from 'js-md5'
 import { ApiRes,API_RES } from '@/lib/consts'
 import { useUserStore } from '@/store'
+import { MessagePlugin } from 'tdesign-vue-next'
+import { DesktopIcon,LockOnIcon,ImageIcon,RefreshIcon} from 'tdesign-icons-vue-next'
 
 const router = useRouter()
 const captcha = ref('')
@@ -28,17 +30,17 @@ const formData = reactive({
 
 const onSubmit = () => {
   if (!formData.account) {
-    Toast('请填写用户名或手机号',101)
+    MessagePlugin.error('请填写用户名或手机号')
     return false
   } else if(!formData.password) {
-    Toast('请填写密码',101)
+    MessagePlugin.error('请填写密码')
     return false
   } else if(!formData.captcha) {
-    Toast('请填写验证码',101)
+    MessagePlugin.error('请填写验证码')
     return false
   }
   api.login({account:formData.account,password:md5(formData.password),captcha:formData.captcha}).then((res:ApiRes)=>{
-    Toast(res.msg, res.code)
+    ApiToast(res.msg, res.code)
     if(res.code == API_RES.SUCCESS){
       const menus:Array<string> = []
       const roles:Array<string> = []
@@ -55,8 +57,8 @@ const onSubmit = () => {
       })
       // 页面跳转
       setTimeout(() => {
-        router.push({name: res.data.roles[0].redirect})
-      }, 800);
+        router.push({name: 'user'})
+      }, 400);
     }else{
         refreshCaptch()
     }
@@ -73,14 +75,14 @@ const onSubmit = () => {
           <t-form-item name="account">
             <t-input v-model="formData.account" clearable placeholder="用户名/手机号">
               <template #prefix-icon>
-                <t-icon name="desktop" />
+                <DesktopIcon />
               </template>
             </t-input>
           </t-form-item>
           <t-form-item name="password">
             <t-input v-model="formData.password" type="password" placeholder="请输入密码">
               <template #prefix-icon>
-                <t-icon name="lock-on" />
+                <LockOnIcon />
               </template>
             </t-input>
           </t-form-item>
@@ -88,11 +90,11 @@ const onSubmit = () => {
             <t-input-group separate>
               <t-input style="width:200px;" v-model="formData.captcha" clearable placeholder="图片验证码">
                 <template #prefix-icon>
-                  <t-icon name="image" />
+                  <ImageIcon />
                 </template>
               </t-input>
               <div class="captcha"><img :src="captcha" class="img" alt="captcha" /></div>
-              <div class="refresh" @click="refreshCaptch"><t-icon name="refresh" /></div>
+              <div class="refresh" @click="refreshCaptch"><RefreshIcon /></div>
             </t-input-group>
           </t-form-item>
           <t-form-item style="padding-top: 8px">

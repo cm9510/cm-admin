@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { TOKEN_NAME } from '@/lib/consts'
 import { store } from '@/store'
+import api from '@/lib/api';
 
 export const useUserStore = defineStore('user', {
   state: () => {
@@ -21,7 +22,8 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem(TOKEN_NAME, JSON.stringify(data));
     },
 
-    logout() {
+    async logout() {
+      await api.logout()
       this.$patch({
         nickname: '',
         roles: [],

@@ -8,6 +8,18 @@ const baseRoutes: Array<RouteRecordRaw> = [
     component: () => import('../pages/login/LoginView.vue')
   },
   {
+    path: '/user',
+    component: () => import('../pages/LayoutView.vue'),
+    children: [
+      {
+        path: '',
+        name: 'user',
+        meta: { title: '个人中心'},
+        component: () => import('../pages/Home.vue'),
+      }
+    ]
+  },
+  {
     path: '/test',
     name: 'test',
     component: () => import('../pages/aaView.vue')

@@ -14,6 +14,24 @@ export const Toast = (msg: string, code: number): void => {
         MessagePlugin.error(msg)
     }
 }
+export const ApiToast = (msg: string, code: number): void => {
+    if (code === API_RES.SUCCESS) {
+        MessagePlugin.success(msg)
+    } else if (code === API_RES.FAIL) {
+        MessagePlugin.error(msg)
+    }
+}
+
+//防抖函数
+export const debounce = (func: Function, delay: number) => {
+    let timerId: any = null;
+    return function (this: any, ...args: any[]) {
+        clearTimeout(timerId);
+        timerId = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+}
 
 /**
  * 格式化时间
@@ -52,47 +70,6 @@ export const datetime = (timestamp: any, type = 1, getTime = true) => {
  * @param loadTxt loading文字
  * @returns
  */
-export const fetchHttp1 = (option: any, loading = true, loadTxt = '加载中') => {
-    let loadInst: any = null
-    if (loading) {
-        loadInst = LoadingPlugin({ attach: 'body', text: loadTxt });
-    }
-    const userStore = useUserStore()
-    const init: any = {}
-    init.headers = {
-        'Content-Type': 'application/json',
-        'token': userStore.token
-    }
-    init.method = option.method ? option.method : 'get'
-    if (option.fields && Object.keys(option.fields).length > 0) {
-        if (init.method.toLowerCase() === 'post') {
-            init.body = JSON.stringify(option.fields)
-        } else {
-            let str = ''
-            for (const k in option.fields) {
-                str += `&${k}=${option.fields[k]}`
-            }
-            option.url += '?' + str.slice(1)
-        }
-    }
-
-    return new Promise((resolve, reject) => {
-        fetch(option.url, init).then(res => {
-            if (loading) {
-                loadInst.hide()
-            }
-            if (res.ok && res.status >= 200 && res.status < 300) {
-                resolve(res.json())
-            } else {
-                reject(res.statusText)
-            }
-        }).catch(err => {
-            console.log('err=>', err);
-            MessagePlugin.error('Error: 请求发送失败')
-        })
-    })
-}
-
 export const fetchHttp = (params: RequestParams, showLoading = true, loadTxt = '加载中'): Promise<any> => {
     const { header, query, path, method, url, body } = params
     const userStore = useUserStore()
@@ -147,3 +124,18 @@ export const fetchHttp = (params: RequestParams, showLoading = true, loadTxt = '
         throw new Error(error)
     })
 }
+
+//计算时间戳距离当前多少天
+export const calculateDays = (timestamp: number): number =>{
+    const oneDayInMillis = 86400000; // 一天的毫秒数
+    const currentDate = new Date(); // 当前日期
+    const targetDate = new Date(timestamp * 1000); // 目标日期
+    // 将目标日期设置为 00:00:00
+    targetDate.setHours(0, 0, 0, 0);
+    // 将当前日期设置为 00:00:00
+    currentDate.setHours(0, 0, 0, 0);
+    // 计算两个日期的时间差，并取整得到天数
+    const timeDiffInMillis = currentDate.getTime() - targetDate.getTime();    
+    return Math.ceil(timeDiffInMillis / oneDayInMillis);
+}
+  

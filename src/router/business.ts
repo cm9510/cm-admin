@@ -1,13 +1,12 @@
 import { RouteRecordRaw } from 'vue-router'
 
-import Layout from '../pages/LayoutView.vue'
 
 export const businessRoutes: Array<RouteRecordRaw> = [
     {
       path: '/system',
       redirect: '/system/members',
       meta: {title:'系统管理', icon:'setting'},
-      component: Layout,
+      component: () => import('../pages/LayoutView.vue'),
       children: [
         {
           path: 'members',
@@ -34,6 +33,6 @@ export const businessRoutes: Array<RouteRecordRaw> = [
           component:() => import('../pages/system/Logs.vue')
         },
       ]
-    },
+    }  
   ]
   

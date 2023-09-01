@@ -4,6 +4,7 @@ import { useUserStore } from '@/store'
 import { ref } from '@vue/reactivity'
 import { onMounted } from 'vue'
 import { RouteRecordRaw, useRouter } from 'vue-router'
+import {Setting1Icon,ViewListIcon,UserIcon,StarIcon,CheckIcon} from 'tdesign-icons-vue-next';
 
 
 const router = useRouter()
@@ -57,13 +58,15 @@ const changeCollapsed = () => {
 }
 
 const account = [
-  { content: '账号信息', value: 'account' },
+  { content: '个人中心', value: 'account' },
   { content: '退出', value: 'logout' }
 ]
 const clickHandler = ({ value }:any) => {
   if(value === 'logout'){
     userStore.logout()
     router.push({path: '/login'})
+  }else if(value === 'account'){
+    router.push({path: '/user'})
   }
 }
 
@@ -130,17 +133,15 @@ const navTo = (path:string) => {
       <div class="top-col">
         <t-head-menu :theme="themeMode" expand-type="popup">
           <template #logo>
-            <t-icon class="t-menu__operations-icon" name="view-list" @click="changeCollapsed" />
+            <ViewListIcon size="large" class="menu-op-icon" @click="changeCollapsed" />
           </template>
           <template #operations>
             <t-dropdown :options="account" :min-column-width="112" @click="clickHandler">
               <t-button variant="text">
-                <t-icon size="large" name="user" /> {{userStore.nickname}}
+                <UserIcon size="large" /> {{userStore.nickname}}
               </t-button>
             </t-dropdown>
-            <a href="javascript:;" @click="showSetting = !showSetting">
-              <t-icon class="t-menu__operations-icon" name="setting" />
-            </a>
+            <Setting1Icon size="large" class="menu-op-icon" @click="showSetting = !showSetting"/>
           </template>
         </t-head-menu>
       </div>
@@ -153,36 +154,36 @@ const navTo = (path:string) => {
     <p>主题模式</p>
     <div class="mode">
       <div>
-        <div :class="{'mode-item':true, 'checked':(themeMode === 'light')}"
-          @click="setMode('light')">
-          <div class="inner light">
-            <t-icon name="star-filled" size="25" />
-          </div>
+        <div :class="{'mode-item':true, 'checked':(themeMode === 'light')}" @click="setMode('light')">
+          <div class="inner light"><StarIcon size="25" /></div>
         </div>
         <p class="txt">明亮</p>
       </div>
       <div>
         <div :class="{'mode-item':true, 'checked':(themeMode === 'dark')}" @click="setMode('dark')">
-          <div class="inner dark">
-            <t-icon name="star-filled" size="25" />
-          </div>
+          <div class="inner dark"><StarIcon size="25" /></div>
         </div>
         <p class="txt">暗黑</p>
       </div>
     </div>
     <p style="margin-top:14px;">主题色</p>
     <div class="theme-color">
-      <div class="theme-item" v-for="(v, i) in colorOptions.slice(0,colorOptions.length-1)" :key="i"
-        :style="`background-color:${v.value};`" @click="checkColor(v.type)">
-        <t-icon v-show="themeColor === v.type" class="theme-check" name="check"></t-icon>
+      <div class="theme-item" v-for="(v, i) in colorOptions.slice(0,colorOptions.length-1)" :key="i" :style="`background-color:${v.value};`"
+       @click="checkColor(v.type)">
+         <CheckIcon v-show="themeColor === v.type" size="large" style="color:white;"/>
       </div>
     </div>
   </t-drawer>
 </template>
 
 <style scoped lang="less">
-@topHeight: 65px;
-
+.menu-op-icon{
+  padding:var(--td-size-3);cursor: pointer;border-radius:var(--td-radius-small);
+  color: var(--td-gray-color-8);
+  &:hover{
+    background-color: var(--td-gray-color-3);
+  }
+}
 .layout {
   display: flex;
   height: 100%;
@@ -196,15 +197,15 @@ const navTo = (path:string) => {
       z-index: 99;
       background-color: var(--td-bg-color-container);
       border-bottom: 1px solid var(--td-border-level-1-color);
-      height: @topHeight;
-      line-height: @topHeight;
+      height: var(--td-comp-size-xxxl);
+      line-height: var(--td-comp-size-xxxl);
       text-align: center;
       position: sticky;
       top: 0;
       left: 0;
     }
     .menus {
-      height: calc(100% - @topHeight);
+      height: calc(100% - var(--td-comp-size-xxxl) - 2px);
     }
   }
 
@@ -220,16 +221,19 @@ const navTo = (path:string) => {
       z-index: 99;
     }
     .content {
-      height: calc(100% - @topHeight);
+      height: calc(100% - var(--td-size-8) - var(--td-comp-size-xxxl) - 2px);
       overflow-y: scroll;
-      padding: 12px;
+      padding: var(--td-size-5);
+
+      &::-webkit-scrollbar{
+        width:var(--td-size-4);
+        background-color: var(--td-bg-color-container);
     }
-  }
-}
-:deep(.t-menu__logo:not(:empty)){
-  margin-left: 10px;
-  .t-icon {
-    cursor: pointer;
+
+    &::-webkit-scrollbar-thumb{
+        background-color: var(--td-gray-color-5);border-radius: 4px;
+    }
+    }
   }
 }
 

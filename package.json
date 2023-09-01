@@ -9,9 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "dayjs": "^1.11.9",
     "js-md5": "^0.7.3",
     "pinia": "^2.1.6",
-    "tdesign-vue-next": "^1.5.1",
+    "tdesign-icons-vue-next": "^0.2.2",
+    "tdesign-vue-next": "^1.5.3",
     "vue": "^3.3.4",
     "vue-router": "^4.2.4"
   },
