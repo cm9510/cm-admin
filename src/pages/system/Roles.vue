@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ApiRes, API_RES } from '@/lib/consts'
-import api from '@/lib/api'
+import { type ApiResp, API_SUCCESS_CODE } from '@/lib/consts'
 import { reactive, ref } from '@vue/reactivity'
 import { onMounted } from '@vue/runtime-core'
-import { datetime, debounce,ApiToast } from '@/lib/utils'
+import { datetime, debounce } from '@/lib/utils'
 import { MessagePlugin } from 'tdesign-vue-next'
 import ScrollArea from '@/components/ScrollArea.vue'
 import {AddIcon,SearchIcon} from 'tdesign-icons-vue-next';
+import { ApiAddRole, ApiDelSys, ApiPermissionAll, ApiRoleList } from '@/lib/api'
 
 const columns = [
   { colKey: 'id', title: 'ID', width: 80, align: 'center' },
@@ -37,13 +37,13 @@ const loadRoleList = (page: number, size: number): void => {
   if (keyword.value) {
     param.keyword = keyword.value
   }
-  api.roleList(param).then((res: ApiRes) => {
-    if(res.code == API_RES.SUCCESS){
-      pagination.total = res.data.total
-      list.value = res.data.list
-    }else{
-      ApiToast(res.msg, 101)
+  ApiRoleList(param).then(({code,msg,data}: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    pagination.total = data.total
+    list.value = data.list
   })
 }
 
@@ -81,19 +81,18 @@ const editRole = (row: any): void => {
     role.permissions.push(v.id)
   })
   showEdit.value = true
-  
 }
 
 const allPerms = ref<any>([])
 const loadPermission = ():void => {
   if(allPerms.value.length < 1){
-    api.permissionAll().then((res: ApiRes) => {
-      if(res.code === API_RES.SUCCESS){
-        allPerms.value = res.data
-      }else{
-        MessagePlugin.error(res.msg)
+    ApiPermissionAll().then(({ code, msg, data }: ApiResp) => {
+      if (code !== API_SUCCESS_CODE) {
+        MessagePlugin.error(msg)
+        return
       }
-    })
+      allPerms.value = data
+  })
   }
 }
 const clearaForm = ():void => {
@@ -121,27 +120,30 @@ const editSubmit = () => {
   }
   const ePerm = { ...role }
   ePerm.status = ePerm.status === 1 ? 0 : 1
-  api.addRole(ePerm).then((res: ApiRes) => {
-    ApiToast(res.msg, res.code)
-    if (res.code === API_RES.SUCCESS) {
-      loadRoleList(pagination.defaultCurrent, pagination.defaultPageSize)
-      showEdit.value = false
+  ApiAddRole(ePerm).then(({ code, msg }: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    MessagePlugin.success(msg)
+    loadRoleList(pagination.defaultCurrent, pagination.defaultPageSize)
+    showEdit.value = false
   })
 }
 
 // 删除角色
 const delRole = (idx: number, id: number) => {
-  api.delSys({ id: id,body:'role'}).then((res: ApiRes) => {
-    ApiToast(res.msg, res.code)
-    if (res.code === API_RES.SUCCESS) {
-      list.value.splice(idx, 1)
-      pagination.total -= 1
+  ApiDelSys({ id: id,body:'role'}).then(({ code, msg }: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    MessagePlugin.success(msg)
+    list.value.splice(idx, 1)
+    pagination.total -= 1
   })
 }
 
-// const value = ref([]);
 </script>
 
 <template>

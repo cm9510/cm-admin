@@ -1,23 +1,23 @@
 'use strict'
 
-import { useUserStore } from '@/store'
-import { LoadingPlugin, MessagePlugin } from 'tdesign-vue-next'
-import { API_RES,RequestParams } from './consts'
+import { LoadingInstance, LoadingPlugin, MessagePlugin } from 'tdesign-vue-next'
+import { API_FAIL_CODE, API_SUCCESS_CODE, RequestParams } from './consts'
+import { useUserStore } from '@/store/user'
 
 /**
  * 提示层
  */
 export const Toast = (msg: string, code: number): void => {
-    if (code === API_RES.SUCCESS) {
+    if (code === API_SUCCESS_CODE) {
         MessagePlugin.success(msg)
-    } else if (code === API_RES.FAIL) {
+    } else if (code === API_FAIL_CODE) {
         MessagePlugin.error(msg)
     }
 }
 export const ApiToast = (msg: string, code: number): void => {
-    if (code === API_RES.SUCCESS) {
+    if (code === API_SUCCESS_CODE) {
         MessagePlugin.success(msg)
-    } else if (code === API_RES.FAIL) {
+    } else if (code === API_FAIL_CODE) {
         MessagePlugin.error(msg)
     }
 }
@@ -84,7 +84,7 @@ export const fetchHttp = (params: RequestParams, showLoading = true, loadTxt = '
         finalUrl += path
     }
     if (query) {
-        const queryParams = Object.entries(query).map(([key, value]:any) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&')
+        const queryParams = Object.entries(query).map(([key, value]:any) => `${key}=${encodeURIComponent(value)}`).join('&')
         finalUrl += `?${queryParams}`
     }
 
@@ -102,14 +102,13 @@ export const fetchHttp = (params: RequestParams, showLoading = true, loadTxt = '
         }
     }
 
-    let loadInst: any = null
+    let loadInst: LoadingInstance|null = null
     if (showLoading) {
         loadInst = LoadingPlugin({ attach: 'body', text: loadTxt });
     }
     return fetch(finalUrl, requestOptions).then((response) => {
         if (!response.ok) {
-            MessagePlugin.error(`响应异常：[${response.status}]${response.status}`)
-            // throw new Error('HTTP Response Status Invalid.');
+            MessagePlugin.error(`响应异常：[${response.status}]`)
         }
         if (loadInst) {
             loadInst.hide()

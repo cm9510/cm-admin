@@ -1,50 +1,64 @@
 <script setup lang="ts">
 import { businessRoutes } from '@/router/business'
-import { useUserStore } from '@/store'
 import { ref } from '@vue/reactivity'
 import { onMounted } from 'vue'
 import { RouteRecordRaw, useRouter } from 'vue-router'
-import {Setting1Icon,ViewListIcon,UserIcon,StarIcon,CheckIcon} from 'tdesign-icons-vue-next';
-
+import { Setting1Icon, ViewListIcon, UserIcon, StarIcon, CheckIcon } from 'tdesign-icons-vue-next';
+import { useUserStore } from '@/store/user';
 
 const router = useRouter()
-const userStore = useUserStore()
+const store = useUserStore()
 const menuList = ref<any>([])
 
-onMounted(()=>{
-  const {menus, token} = userStore
-  
-  if(token && menus.length){
-    businessRoutes.map((item:RouteRecordRaw, _) => {
-      if(item.children?.length){ //有二级的
-        let _sub:any = []
-        item.children.map(sub => {
-          if(menus.indexOf(sub.name) >= 0 && !sub.meta?.hide){
-            _sub.push({
-              path: sub.path,
-              title: sub.meta?.title
-            })
+onMounted(() => {
+  const { menus, token } = store
+
+  if (token && menus.length) {
+    businessRoutes.map((item: RouteRecordRaw, _) => {
+      // const menu:any = { path: item.path, title: item.meta?.title, icon: item.meta?.icon, sub: [] }
+      const subMenu: Array<any> = []
+      if (item.children?.length) {
+        item.children.map((sub:RouteRecordRaw) => {
+          if (menus.indexOf(sub.name) >= 0 && !sub.meta?.hide) {
+            subMenu.push({ path: sub.path, title: sub.meta?.title })
           }
         })
-        if(_sub.length > 0){
-          menuList.value.push({
-            path: item.path,
-            title: item.meta?.title,
-            icon: item.meta?.icon,
-            sub:_sub
-          })
-        }
-      }else if((!item.children || !item.children.length) && !item.meta?.hide){ //没有二级的
-        menuList.value.push({
-          path: item.path,
-          title: item.meta?.title,
-          icon: item.meta?.icon,
-          sub:[]
-        })
       }
-    })    
-  }else{
-    router.push({path: '/login'})
+      if (subMenu.length > 0) {
+        menuList.value.push({ path: item.path, title: item.meta?.title, icon: item.meta?.icon, sub: subMenu })
+      }
+      // if (item.children?.length > 0) { //有二级的
+      //   const sub = item.children
+      //   let _sub: any = []
+      //   item.children.map((sub: RouteRecordRaw) => {
+      //     if (menus.indexOf(sub.name) >= 0 && !sub.meta?.hide) {
+      //       _sub.push({
+      //         path: sub.path,
+      //         title: sub.meta?.title
+      //       })
+      //     }
+      //   })
+      //   if (_sub.length > 0) {
+      //     menuList.value.push({
+      //       path: item.path,
+      //       title: item.meta?.title,
+      //       icon: item.meta?.icon,
+      //       sub: _sub
+      //     })
+      //   }
+      // } else if ((!item.children || !item.children.length) && !item.meta?.hide) { //没有二级的
+      //   menuList.value.push({
+      //     path: item.path,
+      //     title: item.meta?.title,
+      //     icon: item.meta?.icon,
+      //     sub: []
+      //   })
+      // }
+
+      // menuList.value.push(menu)
+    })
+  } else {
+    router.push({ path: '/login' })
   }
 })
 
@@ -61,12 +75,12 @@ const account = [
   { content: '个人中心', value: 'account' },
   { content: '退出', value: 'logout' }
 ]
-const clickHandler = ({ value }:any) => {
-  if(value === 'logout'){
-    userStore.logout()
-    router.push({path: '/login'})
-  }else if(value === 'account'){
-    router.push({path: '/user'})
+const clickHandler = ({ value }: any) => {
+  if (value === 'logout') {
+    store.logout()
+    router.push({ path: '/login' })
+  } else if (value === 'account') {
+    router.push({ path: '/user' })
   }
 }
 
@@ -97,8 +111,8 @@ const checkColor = (color: string) => {
   document.documentElement.setAttribute('theme-color', color)
 }
 
-const navTo = (path:string) => {
-  router.push({path: path})
+const navTo = (path: string) => {
+  router.push({ path: path })
 }
 </script>
 
@@ -138,7 +152,7 @@ const navTo = (path:string) => {
           <template #operations>
             <t-dropdown :options="account" :min-column-width="112" @click="clickHandler">
               <t-button variant="text">
-                <UserIcon size="large" /> {{userStore.nickname}}
+                <UserIcon size="large" /> {{store.nickname}}
               </t-button>
             </t-dropdown>
             <Setting1Icon size="large" class="menu-op-icon" @click="showSetting = !showSetting"/>

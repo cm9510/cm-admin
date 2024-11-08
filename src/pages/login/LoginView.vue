@@ -1,25 +1,26 @@
 <script setup lang="ts">
 import { onMounted,reactive, ref } from '@vue/runtime-core'
-import api from '@/lib/api'
-import { ApiToast } from '@/lib/utils'
 import { useRouter } from 'vue-router'
 import md5 from 'js-md5'
-import { ApiRes,API_RES } from '@/lib/consts'
-import { useUserStore } from '@/store'
+import { type ApiResp,API_SUCCESS_CODE } from '@/lib/consts'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { DesktopIcon,LockOnIcon,ImageIcon,RefreshIcon} from 'tdesign-icons-vue-next'
+import { useUserStore } from '@/store/user'
+import { ApiGetCaptch, ApiLogin } from '@/lib/api'
 
 const router = useRouter()
 const captcha = ref('')
-const userStore = useUserStore()
+const { setLogin } = useUserStore()
 
 onMounted(() => {
   refreshCaptch()
 })
 
 const refreshCaptch = ():void => {
-    api.getCaptch({kw:'admin'}).then((res: ApiRes) => {
-        captcha.value = res.data.src
+    ApiGetCaptch({kw:'admin'}).then(({code,data}:  ApiResp) => {
+      if (code === API_SUCCESS_CODE) {
+        captcha.value = data.src
+      }
     })
 }
 const formData = reactive({
@@ -39,71 +40,64 @@ const onSubmit = () => {
     MessagePlugin.error('请填写验证码')
     return false
   }
-  api.login({account:formData.account,password:md5(formData.password),captcha:formData.captcha}).then((res:ApiRes)=>{
-    ApiToast(res.msg, res.code)
-    if(res.code == API_RES.SUCCESS){
-      const menus:Array<string> = []
-      const roles:Array<string> = []
-      res.data.roles.map((item:any) => {
-        menus.push(...item.roles.split(','))
-        roles.push(item.key)
-      })
-      // 存入缓存
-      userStore.setLogin({
-        nickname: res.data.nickname,
-        role:roles,
-        menus: menus,
-        token: res.data.token
-      })
-      // 页面跳转
-      setTimeout(() => {
-        router.push({name: 'user'})
-      }, 400);
-    }else{
-        refreshCaptch()
+  ApiLogin({ account: formData.account, password: md5(formData.password), captcha: formData.captcha }).then(({ code, msg, data }: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      refreshCaptch()
+      return
     }
+    const menus: Array<string> = []
+    const roles: Array<string> = []
+    data.roles.map((item: any) => {
+      menus.push(...item.roles.split(','))
+      roles.push(item.key)
+    })
+    // 存入缓存
+    setLogin({ nickname: data.nickname, role: roles, menus: menus, token: data.token})
+    // 页面跳转
+    setTimeout(() => router.push({ name: 'home' }), 300);
   })
 }
 </script>
 
 <template>
-  <div class="login">
-    <div class="login-form">
-      <div class="title">后台管理系统</div>
-      <div class="form">
-        <t-form ref="form" :data="formData" :label-width="0" @submit="onSubmit">
-          <t-form-item name="account">
-            <t-input v-model="formData.account" clearable placeholder="用户名/手机号">
+<div class="login">
+  <div class="login-form">
+    <div class="title">后台管理系统</div>
+    <div class="form">
+      <t-form ref="form" :data="formData" :label-width="0" @submit="onSubmit">
+        <t-form-item name="account">
+          <t-input v-model="formData.account" clearable placeholder="用户名/手机号">
+            <template #prefix-icon>
+              <DesktopIcon />
+            </template>
+          </t-input>
+        </t-form-item>
+        <t-form-item name="password">
+          <t-input v-model="formData.password" type="password" placeholder="请输入密码">
+            <template #prefix-icon>
+              <LockOnIcon />
+            </template>
+          </t-input>
+        </t-form-item>
+        <t-form-item name="captcha">
+          <t-input-group separate>
+            <t-input style="width:200px;" v-model="formData.captcha" clearable placeholder="图片验证码">
               <template #prefix-icon>
-                <DesktopIcon />
+                <ImageIcon />
               </template>
             </t-input>
-          </t-form-item>
-          <t-form-item name="password">
-            <t-input v-model="formData.password" type="password" placeholder="请输入密码">
-              <template #prefix-icon>
-                <LockOnIcon />
-              </template>
-            </t-input>
-          </t-form-item>
-          <t-form-item name="captcha">
-            <t-input-group separate>
-              <t-input style="width:200px;" v-model="formData.captcha" clearable placeholder="图片验证码">
-                <template #prefix-icon>
-                  <ImageIcon />
-                </template>
-              </t-input>
-              <div class="captcha"><img :src="captcha" class="img" alt="captcha" /></div>
-              <div class="refresh" @click="refreshCaptch"><RefreshIcon /></div>
-            </t-input-group>
-          </t-form-item>
-          <t-form-item style="padding-top: 8px">
-            <t-button theme="primary" type="submit" block>登录</t-button>
-          </t-form-item>
-        </t-form>
-      </div>
+            <div class="captcha"><img :src="captcha" class="img" alt="captcha" /></div>
+            <div class="refresh" @click="refreshCaptch"><RefreshIcon /></div>
+          </t-input-group>
+        </t-form-item>
+        <t-form-item style="padding-top: 8px">
+          <t-button theme="primary" type="submit" block>登录</t-button>
+        </t-form-item>
+      </t-form>
     </div>
   </div>
+</div>
 </template>
 
 <style lang="less" scoped>

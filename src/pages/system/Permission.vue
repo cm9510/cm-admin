@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import api from '@/lib/api'
-import { ApiRes, API_RES } from '@/lib/consts'
+import { type ApiResp, API_SUCCESS_CODE } from '@/lib/consts'
 import { reactive, ref } from '@vue/reactivity'
 import { onMounted } from '@vue/runtime-core'
-import { datetime,debounce,ApiToast} from '@/lib/utils'
+import { datetime,debounce } from '@/lib/utils'
 import {AddIcon,EditIcon,MinusCircleIcon,SearchIcon} from 'tdesign-icons-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next'
+import { ApiAddPermission, ApiAddPermissionGroup, ApiDelSys, ApiPermissionGroups, ApiPermissionList } from '@/lib/api';
 
 const columns = [
   { colKey: 'id', title: 'ID', width: 80, align: 'center' },
@@ -36,14 +36,18 @@ const loadGroupList = (first=false)=>{
   if(first){
     query.lp = 'load'
   }
-  api.permissionGroups(query).then((res:ApiRes)=>{
-    if (res.data.group?.length) {
-      groupList.value = res.data.group
-      options.value = res.data.group.map((v:any) => ({label:v.name,value:v.id}))
+  ApiPermissionGroups(query).then(({code, msg, data}: ApiResp)=>{
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
+    }
+    if (data.group?.length) {
+      groupList.value = data.group
+      options.value = data.group.map((v:any) => ({label:v.name,value:v.id}))
       if (first) {
-        groupId.value = res.data.group[0]?.id
-        pagination.total = res.data.permission.total
-        list.value = res.data.permission.list
+        groupId.value = data.group[0]?.id
+        pagination.total = data.permission.total
+        list.value = data.permission.list
       }
     }
   })
@@ -54,9 +58,13 @@ const loadPermissionList = (page: number, size: number): void => {
   if (keyword.value) {
     param.keyword = keyword.value
   }
-  api.permissionList(param).then((res: ApiRes) => {
-    pagination.total = res.data.total
-    list.value = res.data.list
+  ApiPermissionList(param).then(({code, msg, data}: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
+    }
+    pagination.total = data.total
+    list.value = data.list
   })
 }
 
@@ -125,12 +133,14 @@ const editGroupSubmit = () => {
     MessagePlugin.error('key只能是1~20位小写字母')
     return false
   }
-  api.addPermissionGroup(group).then((res: ApiRes) => {
-    ApiToast(res.msg,res.code)
-    if(res.code === API_RES.SUCCESS){
-      loadGroupList()
-      showGroupEdit.value = false
+  ApiAddPermissionGroup(group).then(({code,msg}: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    MessagePlugin.success(msg)
+    loadGroupList()
+    showGroupEdit.value = false
   })
 }
 // 删除分组
@@ -139,11 +149,13 @@ const delGroup = (idx:number,row:any)=>{
     MessagePlugin.error('该分组有权限，不可删除')
     return false
   }
-  api.delSys({id:row.id,body:'permission_group'}).then((res:ApiRes)=>{
-    ApiToast(res.msg,res.code)
-    if(res.code === API_RES.SUCCESS){
-      groupList.value.splice(idx, 1)
+  ApiDelSys({id:row.id,body:'permission_group'}).then(({code,msg}: ApiResp)=>{
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    MessagePlugin.success(msg)
+    groupList.value.splice(idx, 1)
   })
 }
 
@@ -161,23 +173,27 @@ const editSubmit = () => {
   }
   const ePerm = { ...permission }
   ePerm.status = ePerm.status === 1 ? 0 : 1
-  api.addPermission(ePerm).then((res: ApiRes) => {
-    ApiToast(res.msg,res.code)
-    if (res.code === API_RES.SUCCESS) {
-      loadPermissionList(pagination.defaultCurrent, pagination.defaultPageSize)
-      showEdit.value = false
+  ApiAddPermission(ePerm).then(({code,msg}: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    MessagePlugin.success(msg)
+    loadPermissionList(pagination.defaultCurrent, pagination.defaultPageSize)
+    showEdit.value = false
   })
 }
 
 // 删除权限
 const delPerm = (idx: number, id: number) => {
-  api.delSys({ id: id, body: 'permission' }).then((res: ApiRes) => {
-    ApiToast(res.msg,res.code)
-    if (res.code === API_RES.SUCCESS) {
-      list.value.splice(idx, 1)
-      pagination.total -= 1
+  ApiDelSys({ id: id, body: 'permission' }).then(({code,msg}: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    MessagePlugin.success(msg)
+    list.value.splice(idx, 1)
+    pagination.total -= 1
   })
 }
 </script>

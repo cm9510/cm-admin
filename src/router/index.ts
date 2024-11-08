@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { businessRoutes } from './business'
 
 const baseRoutes: Array<RouteRecordRaw> = [
@@ -8,12 +8,12 @@ const baseRoutes: Array<RouteRecordRaw> = [
     component: () => import('../pages/login/LoginView.vue')
   },
   {
-    path: '/user',
+    path: '/home',
     component: () => import('../pages/LayoutView.vue'),
     children: [
       {
         path: '',
-        name: 'user',
+        name: 'home',
         meta: { title: '个人中心'},
         component: () => import('../pages/Home.vue'),
       }
@@ -29,6 +29,6 @@ const baseRoutes: Array<RouteRecordRaw> = [
 const allRouters = [...baseRoutes, ...businessRoutes]
 
 export const router = createRouter({
-  history: createWebHashHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes: allRouters
 })

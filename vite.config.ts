@@ -23,11 +23,11 @@ export default defineConfig({
   },
   server:{
     proxy: {
-      '^/m': {
+      '^/m/': {
         target: 'http://cm-admin.io',
         changeOrigin: true
       },
-      '^/a': {
+      '^/a/': {
         target: 'http://cm-admin.io',
         changeOrigin: true
       }

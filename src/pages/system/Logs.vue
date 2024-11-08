@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import api from '@/lib/api';
-import { API_RES, ApiRes } from '@/lib/consts';
+import { API_SUCCESS_CODE, type ApiResp } from '@/lib/consts';
 import { datetime,debounce } from '@/lib/utils';
 import { reactive, ref } from '@vue/reactivity'
 import { onMounted } from '@vue/runtime-core'
 import { MessagePlugin } from 'tdesign-vue-next';
 import { SearchIcon } from 'tdesign-icons-vue-next'
 import dayjs from 'dayjs';
+import { ApiMemberLogs } from '@/lib/api';
 
 const columns = [
   { colKey: 'member', title: '成员' },
@@ -44,8 +44,8 @@ const loadLogs = (page: number, size: number): void => {
   if(range2.value.length === 2){
     param.range = range2.value
   }
-  api.memberLogs(param).then((res: ApiRes) => {
-    if(res.code == API_RES.SUCCESS){
+  ApiMemberLogs(param).then((res: type ApiResp) => {
+    if(res.code == API_SUCCESS_CODE){
       pagination.total = res.data.total
       list.value = res.data.list
     }else{

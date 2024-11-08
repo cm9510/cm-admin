@@ -1,40 +1,44 @@
 import { defineStore } from 'pinia'
 import { TOKEN_NAME } from '@/lib/consts'
-import { store } from '@/store'
-import api from '@/lib/api';
+import { ref } from 'vue';
+import { ApiLogout } from '@/lib/api';
 
-export const useUserStore = defineStore('user', {
-  state: () => {
-    const _state = localStorage.getItem(TOKEN_NAME)
-    if (_state) {
-      return { ...JSON.parse(_state) }
-    }
-    return {
-      nickname: '',
-      roles: [],
-      menus: [],
-      token: ''
-    }
-  },
-  actions: {
-    setLogin(data: any) {
-      this.$patch({ ...data });
-      localStorage.setItem(TOKEN_NAME, JSON.stringify(data));
-    },
+export const useUserStore = defineStore('user', () => {
+  const nickname = ref('')
+  const roles = ref([])
+  const menus = ref<any>([])
+  const token = ref('')
 
-    async logout() {
-      await api.logout()
-      this.$patch({
-        nickname: '',
-        roles: [],
-        menus: [],
-        token: ''
-      });
+  const setLogin = (data: any) => {
+    if (data.nickname) {
+      nickname.value = data.nickname
+    }
+    if (data.roles) {
+      roles.value = data.roles
+    }
+    if (data.menus) {
+      menus.value = data.menus
+    }
+    if (data.token) {
+      token.value = data.token
+    }
+    localStorage.setItem(TOKEN_NAME, JSON.stringify({
+      nickname: nickname.value,
+      roles: roles.value,
+      menus: menus.value,
+      token: token.value
+    }));
+  }
+
+  const logout = ()=>{
+    ApiLogout().then(()=>{
+      nickname.value = ''
+      menus.value = []
+      roles.value = []
+      token.value = ''
       localStorage.removeItem(TOKEN_NAME);
-    }
-  },
-});
+    })
+  }
 
-export function getUserStore() {
-  return useUserStore(store);
-}
+  return { nickname, roles, menus, token, setLogin, logout }
+});

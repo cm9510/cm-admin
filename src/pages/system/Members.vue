@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ApiRes, API_RES } from '@/lib/consts'
-import api from '@/lib/api'
+import { type ApiResp, API_SUCCESS_CODE } from '@/lib/consts'
 import { reactive, ref } from '@vue/reactivity'
 import { onMounted } from '@vue/runtime-core'
-import { datetime, debounce,ApiToast } from '@/lib/utils'
+import { datetime, debounce } from '@/lib/utils'
 import md5 from 'js-md5'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { AddIcon,SearchIcon } from 'tdesign-icons-vue-next'
+import { ApiAddMember, ApiDelSys, ApiMemberList, ApiRoleAll } from '@/lib/api'
 
 const columns = [
   { colKey: 'id', title: 'ID', width: 80, align: 'center' },
@@ -37,13 +37,13 @@ const loadMembersList = (page: number, size: number): void => {
   if (keyword.value) {
     param.keyword = keyword.value
   }
-  api.memberList(param).then((res: ApiRes) => {
-    if(res.code === API_RES.SUCCESS){
-      pagination.total = res.data.total
-      list.value = res.data.list
-    }else{
-      MessagePlugin.error(res.msg)
+  ApiMemberList(param).then(({code,msg,data}: ApiResp) => {
+    if(code !== API_SUCCESS_CODE){
+      MessagePlugin.error(msg)
+      return
     }
+      pagination.total = data.total
+      list.value = data.list
   })
 }
 
@@ -82,12 +82,12 @@ const editMember = (row: any): void => {
 const allRoles = ref<any>([])
 const loadRoles = ():void => {
   if(allRoles.value.length < 1){
-    api.roleAll().then((res: ApiRes) => {
-      if(res.code === API_RES.SUCCESS){
-        allRoles.value = res.data
-      }else{
-        MessagePlugin.error(res.msg)
+    ApiRoleAll().then(({code,msg,data}: ApiResp) => {
+      if(code !== API_SUCCESS_CODE){
+        MessagePlugin.error(msg)
+        return
       }
+      allRoles.value = data
     })
   }
 }
@@ -127,23 +127,27 @@ const editSubmit = () => {
   }
   delete eMember.password1
   eMember.status = member.status === 1 ? 0 : 1
-  api.addMember(eMember).then((res: ApiRes) => {
-    ApiToast(res.msg,res.code)
-    if (res.code === API_RES.SUCCESS) {
-      loadMembersList(pagination.defaultCurrent, pagination.defaultPageSize)
-      showEdit.value = false
+  ApiAddMember(eMember).then(({code,msg}: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    MessagePlugin.success(msg)
+    loadMembersList(pagination.defaultCurrent, pagination.defaultPageSize)
+    showEdit.value = false
   })
 }
 
 // 删除成员
 const delMember = (idx: number, id: number) => {
-  api.delSys({ id: id,body:'member' }).then((res: ApiRes) => {
-    ApiToast(res.msg,res.code)
-    if (res.code === API_RES.SUCCESS) {
-      list.value.splice(idx, 1)
-      pagination.total -= 1
+  ApiDelSys({ id: id,body:'member' }).then(({code,msg}: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    MessagePlugin.success(msg)
+    list.value.splice(idx, 1)
+    pagination.total -= 1
   })
 }
 </script>
