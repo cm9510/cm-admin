@@ -17,11 +17,11 @@ onMounted(() => {
 })
 
 const refreshCaptch = ():void => {
-    ApiGetCaptch({kw:'admin'}).then(({code,data}:  ApiResp) => {
-      if (code === API_SUCCESS_CODE) {
-        captcha.value = data.src
-      }
-    })
+  ApiGetCaptch({kw:'admin'}).then(({code,data}:  ApiResp) => {
+    if (code === API_SUCCESS_CODE) {
+      captcha.value = data.src
+    }
+  })
 }
 const formData = reactive({
   account: '',
@@ -46,6 +46,7 @@ const onSubmit = () => {
       refreshCaptch()
       return
     }
+    MessagePlugin.success(msg)
     const menus: Array<string> = []
     const roles: Array<string> = []
     data.roles.map((item: any) => {

@@ -30,8 +30,8 @@ export const useUserStore = defineStore('user', () => {
     }));
   }
 
-  const logout = ()=>{
-    ApiLogout().then(()=>{
+  const logout = () => {
+    ApiLogout().then(() => {
       nickname.value = ''
       menus.value = []
       roles.value = []
@@ -40,5 +40,12 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
+  if (!token.value) {
+    const local = localStorage.getItem(TOKEN_NAME)
+    if (local) {
+      setLogin({ ...JSON.parse(local) })
+    }
+  }  
+
   return { nickname, roles, menus, token, setLogin, logout }
-});
+})

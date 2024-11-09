@@ -80,7 +80,7 @@ const clickHandler = ({ value }: any) => {
     store.logout()
     router.push({ path: '/login' })
   } else if (value === 'account') {
-    router.push({ path: '/user' })
+    router.push({ path: '/home' })
   }
 }
 

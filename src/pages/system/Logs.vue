@@ -44,13 +44,13 @@ const loadLogs = (page: number, size: number): void => {
   if(range2.value.length === 2){
     param.range = range2.value
   }
-  ApiMemberLogs(param).then((res: type ApiResp) => {
-    if(res.code == API_SUCCESS_CODE){
-      pagination.total = res.data.total
-      list.value = res.data.list
-    }else{
-      MessagePlugin.error(res.msg)
+  ApiMemberLogs(param).then(({ code,msg,data }: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
     }
+    pagination.total = data.total
+    list.value = data.list
   })
 }
 // 分页改变时
