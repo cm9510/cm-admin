@@ -64,7 +64,7 @@ const role = reactive({
   name: '',
   key: '',
   desc: '',
-  roles: [],
+  routers: [],
   // redirect: '',
   permissions: [] as number[],
   status: 1
@@ -74,7 +74,7 @@ const editRole = (row: any): void => {
   role.name = row.name
   role.key = row.key
   role.desc = row.desc
-  role.roles = row.roles
+  role.routers = row.routers
   // role.redirect = row.redirect
   role.status = row.status === 1 ? 0 : 1
   row.permission.map((v:any) => {
@@ -101,7 +101,7 @@ const clearaForm = ():void => {
   role.key = ''
   // role.redirect = ''
   role.desc = ''
-  role.roles = []
+  role.routers = []
   role.permissions = []
   role.status = 1
 }
@@ -111,7 +111,7 @@ const editSubmit = () => {
   if (!role.name) {
     MessagePlugin.error('请填写角色名')
     return false
-  } else if (!role.roles) {
+  } else if (!role.routers) {
     MessagePlugin.error('请填写路由name')
     return false
   } else if (!role.permissions) {
@@ -173,7 +173,7 @@ const delRole = (idx: number, id: number) => {
           </ScrollArea>
         </template>
         <template #router="{ row }">
-          <ScrollArea :mh="200">{{row.roles.join('、')}}</ScrollArea>
+          <ScrollArea :mh="200">{{row.routers.join('、')}}</ScrollArea>
         </template>
         <template #status="{ row }">
           <t-tag v-if="row.status === 0" theme="success" variant="light">正常</t-tag>
@@ -181,7 +181,7 @@ const delRole = (idx: number, id: number) => {
         </template>
         <template #creator="{ row }">
           <div class="edit-info">创建人：{{row.creator?.nickname || '-'}}</div>
-          <div class="edit-info">修改人：{{row.updator?.nickname || '-'}}</div>
+          <div class="edit-info">修改人：{{row.updater?.nickname || '-'}}</div>
         </template>
         <template #created_at="{ row }">
           {{datetime(row.created_at)}}
@@ -210,7 +210,7 @@ const delRole = (idx: number, id: number) => {
             <t-input v-model="role.redirect" placeholder="登入后跳转页面，路由name值" />
           </t-form-item> -->
           <t-form-item label="路由name" required-mark>
-            <t-tag-input v-model="role.roles" excess-tags-display-type="break-line" placeholder="路由name值" />
+            <t-tag-input v-model="role.routers" excess-tags-display-type="break-line" placeholder="路由name值" />
           </t-form-item>
           <t-form-item label="权限" required-mark>
             <t-tree-select v-model="role.permissions" :data="allPerms"  multiple clearable placeholder="请选择" />

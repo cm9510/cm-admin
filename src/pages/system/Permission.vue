@@ -244,7 +244,7 @@ const delPerm = (idx: number, id: number) => {
         </template>
         <template #creator="{ row }">
           <div class="edit-info">创建人：{{ row.creator?.nickname || '-' }}</div>
-          <div class="edit-info">修改人：{{ row.updator?.nickname || '-' }}</div>
+          <div class="edit-info">修改人：{{ row.updater?.nickname || '-' }}</div>
         </template>
         <template #created_at="{ row }">
           {{ datetime(row.created_at) }}
