@@ -6,7 +6,7 @@ import { API_SUCCESS_CODE, type ApiResp } from '@/lib/consts';
 import { MessagePlugin } from 'tdesign-vue-next';
 import md5 from 'js-md5'
 import dayjs from 'dayjs';
-import { ApiUpdateInfo, ApiUserInfo, ApiUserLogs } from '@/lib/api';
+import { ApiMemberLogs, ApiUpdateInfo, ApiUserInfo } from '@/lib/api';
 
 const showEdit = ref(false)
 const greet = ref('你好')
@@ -40,7 +40,7 @@ const member = reactive<any>({
     password1: ''
 })
 
-// 添加|修改成员
+// 添加|修改资料
 const editSubmit = () => {
     const param: any = { nick: member.nickname }
     if (!member.nickname) {
@@ -103,17 +103,17 @@ const range2 = ref([])
 
 // 加载日志列表
 const loadLogs = (page: number, size: number): void => {
-    const param: any = { page: page, size: size }
+    const param: any = {side:'member', page: page, size: size }
     if (range2.value.length === 2) {
         param.range = range2.value
     }
-    ApiUserLogs(param).then(({code,msg,data}: ApiResp) => {
+    ApiMemberLogs(param).then(({code,msg,data}: ApiResp) => {
         if (code !== API_SUCCESS_CODE) {
             MessagePlugin.error(msg)
             return
         }
         pagination.total = data.total
-        list.value = data.list
+        list.value = data.list || []
     })
 }
 

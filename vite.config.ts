@@ -23,12 +23,8 @@ export default defineConfig({
   },
   server:{
     proxy: {
-      '^/m/': {
-        target: 'http://cm-admin.io',
-        changeOrigin: true
-      },
       '^/a/': {
-        target: 'http://cm-admin.io',
+        target: 'http://192.168.1.103:8081',
         changeOrigin: true
       }
     }

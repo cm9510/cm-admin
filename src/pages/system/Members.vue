@@ -37,13 +37,13 @@ const loadMembersList = (page: number, size: number): void => {
   if (keyword.value) {
     param.keyword = keyword.value
   }
-  ApiMemberList(param).then(({code,msg,data}: ApiResp) => {
+  ApiMemberList(param).then(({ code, msg, data }: ApiResp) => {
     if(code !== API_SUCCESS_CODE){
       MessagePlugin.error(msg)
       return
     }
-      pagination.total = data.total
-      list.value = data.list
+    pagination.total = data.total
+    list.value = data.list || []
   })
 }
 
@@ -87,7 +87,7 @@ const loadRoles = ():void => {
         MessagePlugin.error(msg)
         return
       }
-      allRoles.value = data
+      allRoles.value = data.list
     })
   }
 }

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { TOKEN_NAME } from '@/lib/consts'
 import { ref } from 'vue';
-import { ApiLogout } from '@/lib/api';
 
 export const useUserStore = defineStore('user', () => {
   const nickname = ref('')
@@ -31,21 +30,17 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const logout = () => {
-    ApiLogout().then(() => {
-      nickname.value = ''
-      menus.value = []
-      roles.value = []
-      token.value = ''
-      localStorage.removeItem(TOKEN_NAME);
-    })
+    nickname.value = ''
+    menus.value = []
+    roles.value = []
+    token.value = ''
+    localStorage.removeItem(TOKEN_NAME);
   }
 
-  if (!token.value) {
-    const local = localStorage.getItem(TOKEN_NAME)
-    if (local) {
-      setLogin({ ...JSON.parse(local) })
-    }
-  }  
+  const local = localStorage.getItem(TOKEN_NAME)
+  if (local) {
+    setLogin({ ...JSON.parse(local) })
+  }
 
   return { nickname, roles, menus, token, setLogin, logout }
 })

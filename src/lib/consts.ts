@@ -4,8 +4,8 @@ export type ApiResp = {
     data?: any,
 }
 
-export const API_SUCCESS_CODE = 100
-export const API_FAIL_CODE = 101
+export const API_SUCCESS_CODE = 1000
+export const API_FAIL_CODE = 1001
 
 export const TOKEN_NAME = 'cm-token'
 

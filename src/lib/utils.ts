@@ -70,12 +70,12 @@ export const datetime = (timestamp: any, type = 1, getTime = true) => {
  * @param loadTxt loading文字
  * @returns
  */
-export const fetchHttp = (params: RequestParams, showLoading = true, loadTxt = '加载中'): Promise<any> => {
-    const { header, query, path, method, url, body } = params
+export const fetchHttp = (params: RequestParams): Promise<any> => {
+    const { header, query, path, method, url, body,hideLoading,loadTxt } = params
     const userStore = useUserStore()
     const requestOptions: RequestInit = {
         method,
-        headers: {'token': userStore.token,...header},
+        headers: {'Authorization': userStore.token,...header},
         body: undefined,
     }
 
@@ -103,7 +103,7 @@ export const fetchHttp = (params: RequestParams, showLoading = true, loadTxt = '
     }
 
     let loadInst: LoadingInstance|null = null
-    if (showLoading) {
+    if (hideLoading !== true) {
         loadInst = LoadingPlugin({ attach: 'body', text: loadTxt });
     }
     return fetch(finalUrl, requestOptions).then((response) => {

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted,reactive, ref } from '@vue/runtime-core'
+import { onMounted, reactive, ref } from '@vue/runtime-core'
 import { useRouter } from 'vue-router'
 import md5 from 'js-md5'
-import { type ApiResp,API_SUCCESS_CODE } from '@/lib/consts'
+import { type ApiResp, API_SUCCESS_CODE } from '@/lib/consts'
 import { MessagePlugin } from 'tdesign-vue-next'
-import { DesktopIcon,LockOnIcon,ImageIcon,RefreshIcon} from 'tdesign-icons-vue-next'
+import { DesktopIcon, LockOnIcon, ImageIcon, RefreshIcon } from 'tdesign-icons-vue-next'
 import { useUserStore } from '@/store/user'
 import { ApiGetCaptch, ApiLogin } from '@/lib/api'
 
@@ -16,31 +16,33 @@ onMounted(() => {
   refreshCaptch()
 })
 
-const refreshCaptch = ():void => {
-  ApiGetCaptch({kw:'admin'}).then(({code,data}:  ApiResp) => {
+const refreshCaptch = (): void => {
+  ApiGetCaptch().then(({ code, data }: ApiResp) => {
     if (code === API_SUCCESS_CODE) {
-      captcha.value = data.src
+      captcha.value = data.b
+      formData.capId = data.capId
     }
   })
 }
 const formData = reactive({
   account: '',
   password: '',
-  captcha: ''
+  capId: '',
+  capVal: ''
 })
 
 const onSubmit = () => {
   if (!formData.account) {
     MessagePlugin.error('请填写用户名或手机号')
     return false
-  } else if(!formData.password) {
+  } else if (!formData.password) {
     MessagePlugin.error('请填写密码')
     return false
-  } else if(!formData.captcha) {
+  } else if (!formData.capVal) {
     MessagePlugin.error('请填写验证码')
     return false
   }
-  ApiLogin({ account: formData.account, password: md5(formData.password), captcha: formData.captcha }).then(({ code, msg, data }: ApiResp) => {
+  ApiLogin({ ...formData, password: md5(formData.password) }).then(({ code, msg, data }: ApiResp) => {
     if (code !== API_SUCCESS_CODE) {
       MessagePlugin.error(msg)
       refreshCaptch()
@@ -48,15 +50,17 @@ const onSubmit = () => {
     }
     MessagePlugin.success(msg)
     const menus: Array<string> = []
-    const roles: Array<string> = []
-    data.roles.map((item: any) => {
-      menus.push(...item.roles.split(','))
-      roles.push(item.key)
-    })
+    const routers: Array<string> = []
+    if (data.roles) {
+      data.roles.map((item:any)=>{
+        menus.push(...item.routers.split(','))
+        routers.push(item.flag)
+      })
+    }
     // 存入缓存
-    setLogin({ nickname: data.nickname, role: roles, menus: menus, token: data.token})
+    setLogin({ nickname: data.nickname, routers: routers, menus: menus, token: data.token })
     // 页面跳转
-    setTimeout(() => router.push({ name: 'home' }), 300);
+    setTimeout(() => router.push('/home'), 300);
   })
 }
 </script>
@@ -83,7 +87,7 @@ const onSubmit = () => {
         </t-form-item>
         <t-form-item name="captcha">
           <t-input-group separate>
-            <t-input style="width:200px;" v-model="formData.captcha" clearable placeholder="图片验证码">
+            <t-input style="width:200px;" v-model="formData.capVal" clearable placeholder="图片验证码">
               <template #prefix-icon>
                 <ImageIcon />
               </template>
@@ -124,12 +128,8 @@ const onSubmit = () => {
     }
     .form {
       padding: 30px 50px;
-
       .captcha {
-        width: 120px;
-        height: 32px;
-        background-color: #f3d10d;
-        margin-left: 12px;
+        margin-left: 10px;
         .img {
           width: 100%;
         }

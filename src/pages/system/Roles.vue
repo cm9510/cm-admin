@@ -43,7 +43,7 @@ const loadRoleList = (page: number, size: number): void => {
       return
     }
     pagination.total = data.total
-    list.value = data.list
+    list.value = data.list || []
   })
 }
 
@@ -62,8 +62,8 @@ const showEdit = ref(false)
 const role = reactive({
   id: 0,
   name: '',
-  key: '',
-  desc: '',
+  flag: '',
+  intro: '',
   routers: [],
   // redirect: '',
   permissions: [] as number[],
@@ -72,10 +72,9 @@ const role = reactive({
 const editRole = (row: any): void => {
   role.id = row.id
   role.name = row.name
-  role.key = row.key
-  role.desc = row.desc
-  role.routers = row.routers
-  // role.redirect = row.redirect
+  role.flag = row.flag
+  role.intro = row.intro
+  role.routers = row.routers.split(',')
   role.status = row.status === 1 ? 0 : 1
   row.permission.map((v:any) => {
     role.permissions.push(v.id)
@@ -85,22 +84,19 @@ const editRole = (row: any): void => {
 
 const allPerms = ref<any>([])
 const loadPermission = ():void => {
-  if(allPerms.value.length < 1){
-    ApiPermissionAll().then(({ code, msg, data }: ApiResp) => {
-      if (code !== API_SUCCESS_CODE) {
-        MessagePlugin.error(msg)
-        return
-      }
-      allPerms.value = data
+  ApiPermissionAll().then(({ code, msg, data }: ApiResp) => {
+    if (code !== API_SUCCESS_CODE) {
+      MessagePlugin.error(msg)
+      return
+    }
+    allPerms.value = data.list
   })
-  }
 }
 const clearaForm = ():void => {
   role.id = 0
   role.name = ''
-  role.key = ''
-  // role.redirect = ''
-  role.desc = ''
+  role.flag = ''
+  role.intro = ''
   role.routers = []
   role.permissions = []
   role.status = 1
@@ -118,9 +114,7 @@ const editSubmit = () => {
     MessagePlugin.error('请分配权限')
     return false
   }
-  const ePerm = { ...role }
-  ePerm.status = ePerm.status === 1 ? 0 : 1
-  ApiAddRole(ePerm).then(({ code, msg }: ApiResp) => {
+  ApiAddRole({ ...role, status: role.status === 1 ? 0 : 1}).then(({ code, msg }: ApiResp) => {
     if (code !== API_SUCCESS_CODE) {
       MessagePlugin.error(msg)
       return
@@ -133,7 +127,7 @@ const editSubmit = () => {
 
 // 删除角色
 const delRole = (idx: number, id: number) => {
-  ApiDelSys({ id: id,body:'role'}).then(({ code, msg }: ApiResp) => {
+  ApiDelSys({ id: id, body:'role'}).then(({ code, msg }: ApiResp) => {
     if (code !== API_SUCCESS_CODE) {
       MessagePlugin.error(msg)
       return
@@ -165,23 +159,23 @@ const delRole = (idx: number, id: number) => {
       <t-table row-key="id" :columns="columns" :data="list" :pagination="pagination" size="small" @change="pageChange">
         <template #name="{row}">
           <p class="role-name">· {{row.name}}</p>
-          <p class="role-desc">- {{row.desc}}</p>
+          <p class="role-desc">- {{row.intro}}</p>
         </template>
         <template #permission="{ row }">
           <ScrollArea :mh="200">
-            <t-tag class="per-tag" v-for="(v,i) in row.permission" :key="i">{{v.name}}</t-tag>
+            <t-tag class="per-tag" v-for="(v, i) in row.permission" :key="i">{{v.name}}</t-tag>
           </ScrollArea>
         </template>
         <template #router="{ row }">
-          <ScrollArea :mh="200">{{row.routers.join('、')}}</ScrollArea>
+          <ScrollArea :mh="200">{{row.routers}}</ScrollArea>
         </template>
         <template #status="{ row }">
           <t-tag v-if="row.status === 0" theme="success" variant="light">正常</t-tag>
           <t-tag v-else-if="row.status === 1" theme="danger" variant="light">已停用</t-tag>
         </template>
         <template #creator="{ row }">
-          <div class="edit-info">创建人：{{row.creator?.nickname || '-'}}</div>
-          <div class="edit-info">修改人：{{row.updater?.nickname || '-'}}</div>
+          <div class="edit-info">创建人：{{row?.creator || '-'}}</div>
+          <div class="edit-info">修改人：{{row?.updater || '-'}}</div>
         </template>
         <template #created_at="{ row }">
           {{datetime(row.created_at)}}
@@ -204,7 +198,7 @@ const delRole = (idx: number, id: number) => {
             <t-input v-model="role.name" clearable placeholder="请输入角色名" />
           </t-form-item>
           <t-form-item label="角色标识" required-mark>
-            <t-input v-model="role.key" clearable placeholder="不超过8位字母,下划线等常规字符" />
+            <t-input v-model="role.flag" clearable placeholder="不超过8位字母,下划线等常规字符" />
           </t-form-item>
           <!-- <t-form-item label="首页跳转" required-mark>
             <t-input v-model="role.redirect" placeholder="登入后跳转页面，路由name值" />
@@ -213,13 +207,13 @@ const delRole = (idx: number, id: number) => {
             <t-tag-input v-model="role.routers" excess-tags-display-type="break-line" placeholder="路由name值" />
           </t-form-item>
           <t-form-item label="权限" required-mark>
-            <t-tree-select v-model="role.permissions" :data="allPerms"  multiple clearable placeholder="请选择" />
+            <t-tree-select v-model="role.permissions" :data="allPerms" multiple clearable placeholder="请选择" />
           </t-form-item>
           <t-form-item label="状态">
             <t-switch v-model="role.status" :customValue="[1,0]" size="large" :label="['正常','禁用']" />
           </t-form-item>
           <t-form-item label="简单介绍" required-mark>
-            <t-textarea v-model="role.desc" placeholder="角色介绍，不超过30字" :maxlength="30"></t-textarea>
+            <t-textarea v-model="role.intro" placeholder="角色介绍，不超过30字" :maxlength="30"></t-textarea>
           </t-form-item>
         </t-form>
       </div>

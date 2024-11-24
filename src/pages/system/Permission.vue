@@ -46,8 +46,8 @@ const loadGroupList = (first=false)=>{
       options.value = data.group.map((v:any) => ({label:v.name,value:v.id}))
       if (first) {
         groupId.value = data.group[0]?.id
-        pagination.total = data.permission.total
-        list.value = data.permission.list
+        pagination.total = data.permissions.total
+        list.value = data.permissions.list
       }
     }
   })
@@ -64,7 +64,7 @@ const loadPermissionList = (page: number, size: number): void => {
       return
     }
     pagination.total = data.total
-    list.value = data.list
+    list.value = data.list || []
   })
 }
 
@@ -89,14 +89,14 @@ const pageChange = ({ pagination }: any): void => {
 
 const showEdit = ref(false)
 const showGroupEdit = ref(false)
-const group = reactive({ id: 0, name: '', key: '',sort:'' })
+const group = reactive({ id: 0, name: '', flag: '',sort:'' })
 const permission = reactive({ id: 0, group_id:'', name: '', url: '', status: 1, log: 0 })
 
 //编辑分组
 const editGroup = (row: any): void => {
   group.id = row.id
   group.name = row.name
-  group.key = row.key
+  group.flag = row.flag
   group.sort = row.sort
   showGroupEdit.value = true
 }
@@ -104,7 +104,7 @@ const clearGroupForm = (): void => {
   group.id = 0
   group.sort = ''
   group.name = ''
-  group.key = ''
+  group.flag = ''
 }
 const editPerm = (row: any): void => {
   permission.id = row.id
@@ -129,7 +129,7 @@ const editGroupSubmit = () => {
   if (!group.name) {
     MessagePlugin.error('请填写分组名')
     return false
-  } else if (group.key && !(/^[a-z]{1,20}$/).test(group.key)) {
+  } else if (group.flag && !(/^[a-z]{1,20}$/).test(group.flag)) {
     MessagePlugin.error('key只能是1~20位小写字母')
     return false
   }
@@ -211,7 +211,7 @@ const delPerm = (idx: number, id: number) => {
           <li v-for="(v, i) in groupList" :class="{'group-item':true,'active':(groupId === v.id)}" :key="v.id">
             <div class="title" @click="switchGroup(v.id)">{{v.name}} <span class="group-num">({{v.pn}})</span></div>
             <div class="op">
-              <span class="group-op-icon"><EditIcon  style="color:var(--td-brand-color-6);" @click="editGroup(v)"/></span>
+              <span class="group-op-icon"><EditIcon style="color:var(--td-brand-color-6);" @click="editGroup(v)"/></span>
               <span class="group-op-icon">
                 <t-popconfirm theme="warning" content="将删除此分组？" @confirm="delGroup(i, v)">
                   <MinusCircleIcon style="color:var(--td-error-color-6);"/>
@@ -243,8 +243,8 @@ const delPerm = (idx: number, id: number) => {
           <div class="edit-info">Api：{{ row.url }}</div>
         </template>
         <template #creator="{ row }">
-          <div class="edit-info">创建人：{{ row.creator?.nickname || '-' }}</div>
-          <div class="edit-info">修改人：{{ row.updater?.nickname || '-' }}</div>
+          <div class="edit-info">创建人：{{ row.creator || '-' }}</div>
+          <div class="edit-info">修改人：{{ row.updater || '-' }}</div>
         </template>
         <template #created_at="{ row }">
           {{ datetime(row.created_at) }}
@@ -266,7 +266,7 @@ const delPerm = (idx: number, id: number) => {
           <t-input v-model="group.name" clearable placeholder="请输入分组名" />
         </t-form-item>
         <t-form-item label="Key">
-          <t-input v-model="group.key" clearable placeholder="唯一key值，可不填" />
+          <t-input v-model="group.flag" clearable placeholder="唯一key值，可不填" />
         </t-form-item>
         <t-form-item label="排序">
           <t-input type="number" v-model="group.sort" clearable :placeholder="`整数，数字越大越靠前，当前最大数: ${groupList[0]?.sort}`" />
